@@ -15,7 +15,7 @@ if [ $STREAM != NO ]; then
     ngx_module_name=ngx_stream_multi_upstream_module
     ngx_module_type=STREAM
     ngx_module_link=ADDON
-    ngx_module_incs=$ngx_addon_dir 
+    ngx_module_incs=$ngx_addon_dir
     ngx_module_deps=$ngx_addon_dir/ngx_stream_multi_upstream_module.h
     ngx_module_srcs=$ngx_addon_dir/ngx_stream_multi_upstream_module.c
 
