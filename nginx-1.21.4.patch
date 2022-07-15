@@ -1,15 +1,15 @@
 diff --git src/core/ngx_connection.h src/core/ngx_connection.h
 --- src/core/ngx_connection.h
 +++ src/core/ngx_connection.h
-@@ -123,6 +123,9 @@ typedef enum {
- 
- struct ngx_connection_s {
-     void               *data;
+@@ -193,6 +193,9 @@ struct ngx_connection_s {
+ #if (NGX_THREADS || NGX_COMPAT)
+     ngx_thread_task_t  *sendfile_task;
+ #endif
 +#if (T_NGX_MULTI_UPSTREAM)
 +    void               *multi_c;
 +#endif
-     ngx_event_t        *read;
-     ngx_event_t        *write;
+ };
+ 
  
 diff --git src/http/ngx_http_request.h src/http/ngx_http_request.h
 --- src/http/ngx_http_request.h
