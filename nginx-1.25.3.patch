@@ -1,7 +1,7 @@
-diff --git a/src/core/ngx_connection.h b/src/core/ngx_connection.h
-index 84dd80442..21e7c4e9d 100644
---- a/src/core/ngx_connection.h
-+++ b/src/core/ngx_connection.h
+diff --git src/core/ngx_connection.h src/core/ngx_connection.h
+index 84dd804..21e7c4e 100644
+--- src/core/ngx_connection.h
++++ src/core/ngx_connection.h
 @@ -200,6 +200,9 @@ struct ngx_connection_s {
  #if (NGX_THREADS || NGX_COMPAT)
      ngx_thread_task_t  *sendfile_task;
@@ -12,10 +12,10 @@ index 84dd80442..21e7c4e9d 100644
  };
  
  
-diff --git a/src/http/ngx_http_request.h b/src/http/ngx_http_request.h
-index cc3b7c0ac..ac1ddec43 100644
---- a/src/http/ngx_http_request.h
-+++ b/src/http/ngx_http_request.h
+diff --git src/http/ngx_http_request.h src/http/ngx_http_request.h
+index cc3b7c0..ac1ddec 100644
+--- src/http/ngx_http_request.h
++++ src/http/ngx_http_request.h
 @@ -602,6 +602,13 @@ struct ngx_http_request_s {
  
      unsigned                          http_minor:16;
@@ -30,10 +30,10 @@ index cc3b7c0ac..ac1ddec43 100644
  };
  
  
-diff --git a/src/http/ngx_http_upstream.c b/src/http/ngx_http_upstream.c
-index f5db65338..c340baa2f 100644
---- a/src/http/ngx_http_upstream.c
-+++ b/src/http/ngx_http_upstream.c
+diff --git src/http/ngx_http_upstream.c src/http/ngx_http_upstream.c
+index 2be233c..92ed8d7 100644
+--- src/http/ngx_http_upstream.c
++++ src/http/ngx_http_upstream.c
 @@ -9,6 +9,10 @@
  #include <ngx_core.h>
  #include <ngx_http.h>
@@ -45,7 +45,7 @@ index f5db65338..c340baa2f 100644
  
  #if (NGX_HTTP_CACHE)
  static ngx_int_t ngx_http_upstream_cache(ngx_http_request_t *r,
-@@ -1524,6 +1528,12 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
+@@ -1531,6 +1535,12 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
  }
  
  
@@ -58,7 +58,7 @@ index f5db65338..c340baa2f 100644
  static void
  ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
  {
-@@ -1580,6 +1590,47 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
+@@ -1592,6 +1602,47 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
  
      c = u->peer.connection;
  
@@ -106,7 +106,7 @@ index f5db65338..c340baa2f 100644
      c->requests++;
  
      c->data = r;
-@@ -1814,6 +1865,13 @@ ngx_http_upstream_ssl_handshake(ngx_http_request_t *r, ngx_http_upstream_t *u,
+@@ -1826,6 +1877,13 @@ ngx_http_upstream_ssl_handshake(ngx_http_request_t *r, ngx_http_upstream_t *u,
              u->output.sendfile = 0;
          }
  
@@ -120,7 +120,7 @@ index f5db65338..c340baa2f 100644
          c->write->handler = ngx_http_upstream_handler;
          c->read->handler = ngx_http_upstream_handler;
  
-@@ -2140,6 +2198,14 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
+@@ -2152,6 +2210,14 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
              ngx_post_event(c->read, &ngx_posted_events);
          }
  
@@ -135,8 +135,8 @@ index f5db65338..c340baa2f 100644
          return;
      }
  
-@@ -2181,6 +2247,12 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
-         ngx_add_timer(c->read, u->conf->read_timeout);
+@@ -2193,6 +2259,12 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
+         ngx_add_timer(c->read, u->read_timeout);
  
          if (c->read->ready) {
 +#if (T_NGX_MULTI_UPSTREAM)
@@ -148,7 +148,7 @@ index f5db65338..c340baa2f 100644
              ngx_http_upstream_process_header(r, u);
              return;
          }
-@@ -2218,6 +2290,11 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r,
+@@ -2230,6 +2302,11 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r,
              u->request_body_blocked = 1;
  
          } else {
@@ -160,7 +160,7 @@ index f5db65338..c340baa2f 100644
              u->request_body_blocked = 0;
          }
  
-@@ -3655,6 +3732,13 @@ ngx_http_upstream_process_non_buffered_downstream(ngx_http_request_t *r)
+@@ -3667,6 +3744,13 @@ ngx_http_upstream_process_non_buffered_downstream(ngx_http_request_t *r)
          return;
      }
  
@@ -174,7 +174,7 @@ index f5db65338..c340baa2f 100644
      ngx_http_upstream_process_non_buffered_request(r, 1);
  }
  
-@@ -4326,6 +4410,16 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u,
+@@ -4338,6 +4422,16 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u,
      ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                     "http next upstream, %xi", ft_type);
  
@@ -191,7 +191,7 @@ index f5db65338..c340baa2f 100644
      if (u->peer.sockaddr) {
  
          if (u->peer.connection) {
-@@ -4493,6 +4587,16 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r,
+@@ -4505,6 +4599,16 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r,
      ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                     "finalize http upstream request: %i", rc);
  
@@ -208,11 +208,11 @@ index f5db65338..c340baa2f 100644
      if (u->cleanup == NULL) {
          /* the request was already finalized */
          ngx_http_finalize_request(r, NGX_DONE);
-diff --git a/src/http/ngx_http_upstream.h b/src/http/ngx_http_upstream.h
-index 9a17a03a8..731bed7b2 100644
---- a/src/http/ngx_http_upstream.h
-+++ b/src/http/ngx_http_upstream.h
-@@ -399,6 +399,14 @@ struct ngx_http_upstream_s {
+diff --git src/http/ngx_http_upstream.h src/http/ngx_http_upstream.h
+index 15a35d9..cc88133 100644
+--- src/http/ngx_http_upstream.h
++++ src/http/ngx_http_upstream.h
+@@ -404,6 +404,14 @@ struct ngx_http_upstream_s {
      unsigned                         request_body_sent:1;
      unsigned                         request_body_blocked:1;
      unsigned                         header_sent:1;
@@ -227,11 +227,11 @@ index 9a17a03a8..731bed7b2 100644
  };
  
  
-diff --git a/src/stream/ngx_stream.h b/src/stream/ngx_stream.h
-index 46c362296..fd73481b7 100644
---- a/src/stream/ngx_stream.h
-+++ b/src/stream/ngx_stream.h
-@@ -231,6 +231,13 @@ struct ngx_stream_session_s {
+diff --git src/stream/ngx_stream.h src/stream/ngx_stream.h
+index 3be24e6..a37a4ab 100644
+--- src/stream/ngx_stream.h
++++ src/stream/ngx_stream.h
+@@ -232,6 +232,13 @@ struct ngx_stream_session_s {
      unsigned                       health_check:1;
  
      unsigned                       limit_conn_status:2;
@@ -245,10 +245,10 @@ index 46c362296..fd73481b7 100644
  };
  
  
-diff --git a/src/stream/ngx_stream_upstream.h b/src/stream/ngx_stream_upstream.h
-index f5617794f..c8d792146 100644
---- a/src/stream/ngx_stream_upstream.h
-+++ b/src/stream/ngx_stream_upstream.h
+diff --git src/stream/ngx_stream_upstream.h src/stream/ngx_stream_upstream.h
+index 25433d6..055224d 100644
+--- src/stream/ngx_stream_upstream.h
++++ src/stream/ngx_stream_upstream.h
 @@ -143,6 +143,10 @@ typedef struct {
      unsigned                           connected:1;
      unsigned                           proxy_protocol:1;
