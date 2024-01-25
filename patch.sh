@@ -28,6 +28,9 @@ elif [[ "$1" == *openresty-1.19.9.* ]]; then
 elif [[ "$1" == *openresty-1.21.4.* ]]; then
     patch="$PWD/nginx-1.21.4.patch"
     dir="$1/bundle/nginx-1.21.4"
+elif [[ "$1" == *openresty-1.25.3.* ]]; then
+    patch="$PWD/nginx-1.25.3.patch"
+    dir="$1/bundle/nginx-1.25.3"
 else
     err "can't detect OpenResty version"
     exit 1
