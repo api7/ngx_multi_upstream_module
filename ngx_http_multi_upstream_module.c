@@ -484,6 +484,11 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
     fake_u->rewrite_redirect = u->rewrite_redirect;
     fake_u->rewrite_cookie = u->rewrite_cookie;
 
+#if (HAVE_NGX_UPSTREAM_TIMEOUT_FIELDS)
+    fake_u->read_timeout = u->read_timeout;
+    fake_u->connect_timeout = u->connect_timeout;
+    fake_u->send_timeout = u->connect_timeout;
+#endif
 
     fake_u->multi = 1;
 
