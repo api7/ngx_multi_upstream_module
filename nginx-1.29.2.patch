@@ -58,7 +58,7 @@ index 6ff78fc..cf19c07 100644
  static void
  ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
  {
-@@ -1641,6 +1651,49 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
+@@ -1641,6 +1651,51 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
  
      c = u->peer.connection;
  
@@ -68,7 +68,7 @@ index 6ff78fc..cf19c07 100644
 +            ngx_http_multi_upstream_finalize_request(c,
 +                                                     NGX_HTTP_INTERNAL_SERVER_ERROR);
 +            ngx_log_error(NGX_LOG_ERR, c->log, 0,
-+                          "multi: upstream configured multi, but handler no support");
++                          "multi: upstream configured multi, but handler does not support it");
 +            return;
 +        }
 +
@@ -86,6 +86,8 @@ index 6ff78fc..cf19c07 100644
 +                ngx_http_multi_upstream_process(c, 1);
 +            } else {
 +                ngx_log_error(NGX_LOG_ERR, c->log, 0, "multi: connect reuse unfinished %p", c);
++                ngx_http_upstream_finalize_request(r, u,
++                                                   NGX_HTTP_INTERNAL_SERVER_ERROR);
 +            }
 +        } else {
 +            ngx_http_multi_upstream_finalize_request(c,
@@ -99,7 +101,7 @@ index 6ff78fc..cf19c07 100644
 +        ngx_http_upstream_finalize_request(r, u,
 +                                           NGX_HTTP_INTERNAL_SERVER_ERROR);
 +        ngx_log_error(NGX_LOG_ERR, c->log, 0,
-+                      "multi: need multi, but upstream not support, "
++                      "multi: need multi, but upstream does not support it, "
 +                      "maybe need configuration 'multi' in upstream");
 +        return;
 +    }
@@ -199,7 +201,7 @@ index 6ff78fc..cf19c07 100644
  
 +#if (T_NGX_MULTI_UPSTREAM)
 +    if (u->multi && ngx_http_multi_connection_fake(r)) {
-+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
++        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
 +                "http finalize upstream fake_r %p", r);
 +
 +        ngx_http_multi_upstream_finalize_request(r->connection, rc);
