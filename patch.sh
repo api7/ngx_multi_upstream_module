@@ -19,21 +19,26 @@ if [[ $# != 1 ]]; then
     usage "$0"
 fi
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [[ "$1" == *openresty-1.19.3.* ]]; then
-    patch="$PWD/nginx-1.19.3.patch"
+    patch="$script_dir/nginx-1.19.3.patch"
     dir="$1/bundle/nginx-1.19.3"
 elif [[ "$1" == *openresty-1.19.9.* ]]; then
-    patch="$PWD/nginx-1.19.9.patch"
+    patch="$script_dir/nginx-1.19.9.patch"
     dir="$1/bundle/nginx-1.19.9"
 elif [[ "$1" == *openresty-1.21.4.* ]]; then
-    patch="$PWD/nginx-1.21.4.patch"
+    patch="$script_dir/nginx-1.21.4.patch"
     dir="$1/bundle/nginx-1.21.4"
 elif [[ "$1" == *openresty-1.25.3.* ]]; then
-    patch="$PWD/nginx-1.25.3.patch"
+    patch="$script_dir/nginx-1.25.3.patch"
     dir="$1/bundle/nginx-1.25.3"
 elif [[ "$1" == *openresty-1.27.1.* ]]; then
-    patch="$PWD/nginx-1.27.1.patch"
+    patch="$script_dir/nginx-1.27.1.patch"
     dir="$1/bundle/nginx-1.27.1"
+elif [[ "$1" == *openresty-1.29.2.* ]]; then
+    patch="$script_dir/nginx-1.29.2.patch"
+    dir="$1/bundle/nginx-1.29.2"
 else
     err "can't detect OpenResty version"
     exit 1
