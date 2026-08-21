@@ -727,6 +727,8 @@ ngx_http_multi_upstream_connection_detach(ngx_connection_t *c)
 ngx_int_t
 ngx_http_multi_upstream_connection_close(ngx_connection_t *c)
 {
+    ngx_pool_t  *pool;
+
 #if (NGX_HTTP_SSL)
     /* TODO: do not shutdown persistent connection */
     if (c->ssl) {
@@ -746,13 +748,19 @@ ngx_http_multi_upstream_connection_close(ngx_connection_t *c)
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
             "multi: close http upstream connection: %d", c->fd);
 
-    if (c->pool) {
-        ngx_destroy_pool(c->pool);
-    }
-
     c->destroyed = 1;
 
+    /* ngx_close_connection() still logs through c->log, which lives in c->pool,
+     * so the pool has to outlive it - the same order ngx_http_close_connection()
+     * uses */
+    pool = c->pool;
+    c->pool = NULL;
+
     ngx_close_connection(c);
+
+    if (pool) {
+        ngx_destroy_pool(pool);
+    }
 
     return NGX_OK;
 }
