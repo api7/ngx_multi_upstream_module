@@ -451,7 +451,12 @@ ngx_http_multi_upstream_read_handler(ngx_connection_t *pc)
                     }
                 }
 
-                if (ngx_http_upstream_process_headers(real_r, real_u) != NGX_OK) {
+                rc = ngx_http_upstream_process_headers(real_r, real_u);
+                if (rc != NGX_OK) {
+                    /* nginx 1.31.8+ leaves NGX_ERROR to the caller */
+                    if (rc == NGX_ERROR) {
+                        ngx_http_upstream_finalize_request(real_r, real_u, NGX_ERROR);
+                    }
                     continue;
                 }
 
@@ -472,7 +477,11 @@ ngx_http_multi_upstream_read_handler(ngx_connection_t *pc)
                         }
                     }
 
-                    if (ngx_http_upstream_process_headers(real_r, real_u) != NGX_OK) {
+                    rc = ngx_http_upstream_process_headers(real_r, real_u);
+                    if (rc != NGX_OK) {
+                        if (rc == NGX_ERROR) {
+                            ngx_http_upstream_finalize_request(real_r, real_u, NGX_ERROR);
+                        }
                         continue;
                     }
 
