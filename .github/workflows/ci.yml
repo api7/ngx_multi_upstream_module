@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime:
+          - name: apisix-runtime-or-1.31.8.1
+            script_url: "https://raw.githubusercontent.com/api7/apisix-build-tools/master/build-apisix-runtime.sh"
+            script_name: "build-apisix-runtime.sh"
+            # build-tools master still pins an apisix-nginx-module release without OpenResty 1.31.8.1 support
+            build_env: "OPENRESTY_VERSION=1.31.8.1 apisix_nginx_module_ver=support-openresty-1.31.8.1"
+
+    runs-on: "ubuntu-24.04"
+    name: build (${{ matrix.runtime.name }})
+
+    env:
+      OPENRESTY_PREFIX: "/usr/local/openresty"
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Get dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git wget build-essential cpanminus libncurses5-dev libreadline-dev libssl-dev perl libpcre3 libpcre3-dev zlib1g-dev
+
+      - name: Before install
+        run: |
+          sudo cpanm --notest Test::Nginx > build.log 2>&1 || (cat build.log && exit 1)
+          git clone https://github.com/openresty/test-nginx.git test-nginx
+
+      - name: Install
+        run: |
+          wget ${{ matrix.runtime.script_url }}
+          chmod +x ${{ matrix.runtime.script_name }}
+          env ${{ matrix.runtime.build_env }} OR_PREFIX=$OPENRESTY_PREFIX CC="gcc -fsanitize=address -fdiagnostics-color=always -Werror -Wno-unused-but-set-variable -Wno-unused-parameter" \
+              ./${{ matrix.runtime.script_name }} latest
+
+      - name: Script
+        run: |
+          export PATH=$OPENRESTY_PREFIX/nginx/sbin:$PATH
+          prove -I. -Itest-nginx/lib -r t/
