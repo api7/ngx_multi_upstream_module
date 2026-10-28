@@ -321,6 +321,9 @@ ngx_http_multi_upstream_get_peer(ngx_peer_connection_t *pc, void *data)
     }
 
     c = pc->connection;
+    /* tells ngx_http_upstream_connect() this is a new connection */
+    pc->cached = 0;
+
     if (ngx_http_multi_upstream_init_connection(c, pc, data) != NGX_OK) {
         ngx_log_error(NGX_LOG_ERR, pc->log,
                       0, "multi: init new connection failed, c: %p", c);

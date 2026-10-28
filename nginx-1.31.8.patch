@@ -31,7 +31,7 @@ index 6b62b21..9b519fe 100644
  
  
 diff --git src/http/ngx_http_upstream.c src/http/ngx_http_upstream.c
-index 1c7a9f1..b168bce 100644
+index 1c7a9f1..67a15d2 100644
 --- src/http/ngx_http_upstream.c
 +++ src/http/ngx_http_upstream.c
 @@ -9,6 +9,10 @@
@@ -58,7 +58,7 @@ index 1c7a9f1..b168bce 100644
  static void
  ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
  {
-@@ -1663,6 +1673,51 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
+@@ -1663,6 +1673,58 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
  
      c = u->peer.connection;
  
@@ -78,16 +78,23 @@ index 1c7a9f1..b168bce 100644
 +            ngx_add_timer(c->write, u->conf->connect_timeout);
 +            ngx_log_error(NGX_LOG_INFO, c->log, 0,
 +                          "multi: connect new to backend %p", c);
-+        } else if (rc == NGX_DONE) { //use exist connection
-+            if (ngx_multi_connected(c)) {
++        } else if (rc == NGX_DONE) {
++            if (!u->peer.cached) { //new connection, connected immediately
++                c->read->handler = ngx_http_multi_upstream_connect_handler;
++                c->write->handler = ngx_http_multi_upstream_connect_handler;
++                ngx_add_timer(c->write, u->conf->connect_timeout);
++                ngx_log_error(NGX_LOG_INFO, c->log, 0,
++                              "multi: connect new to backend immediately %p", c);
++                ngx_http_multi_upstream_connect_handler(c->write);
++            } else if (ngx_multi_connected(c)) { //use exist connection
 +                ngx_log_error(NGX_LOG_INFO, c->log, 0, "multi: connect reuse %p", c);
 +
 +                ngx_http_multi_upstream_init_request(c, r);
 +                ngx_http_multi_upstream_process(c, 1);
 +            } else {
-+                ngx_log_error(NGX_LOG_ERR, c->log, 0, "multi: connect reuse unfinished %p", c);
-+                ngx_http_upstream_finalize_request(r, u,
-+                                                   NGX_HTTP_INTERNAL_SERVER_ERROR);
++                /* queued on the connection, connect_init will start it */
++                ngx_log_error(NGX_LOG_INFO, c->log, 0,
++                              "multi: connect reuse unfinished %p, wait", c);
 +            }
 +        } else {
 +            ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -98,11 +105,11 @@ index 1c7a9f1..b168bce 100644
 +
 +        return;
 +    } else if ((u->multi_mode & NGX_MULTI_UPS_NEED_MULTI) == NGX_MULTI_UPS_NEED_MULTI) {
-+        ngx_http_upstream_finalize_request(r, u,
-+                                           NGX_HTTP_INTERNAL_SERVER_ERROR);
 +        ngx_log_error(NGX_LOG_ERR, c->log, 0,
 +                      "multi: need multi, but upstream does not support it, "
 +                      "maybe need configuration 'multi' in upstream");
++        ngx_http_upstream_finalize_request(r, u,
++                                           NGX_HTTP_INTERNAL_SERVER_ERROR);
 +        return;
 +    }
 +#endif
@@ -110,7 +117,7 @@ index 1c7a9f1..b168bce 100644
      c->requests++;
  
      c->data = r;
-@@ -1915,6 +1970,13 @@ ngx_http_upstream_ssl_handshake(ngx_http_request_t *r, ngx_http_upstream_t *u,
+@@ -1915,6 +1977,13 @@ ngx_http_upstream_ssl_handshake(ngx_http_request_t *r, ngx_http_upstream_t *u,
              u->output.sendfile = 0;
          }
  
@@ -124,7 +131,7 @@ index 1c7a9f1..b168bce 100644
          c->write->handler = ngx_http_upstream_handler;
          c->read->handler = ngx_http_upstream_handler;
  
-@@ -2243,6 +2305,14 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
+@@ -2243,6 +2312,14 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
              ngx_post_event(c->read, &ngx_posted_events);
          }
  
@@ -139,7 +146,7 @@ index 1c7a9f1..b168bce 100644
          return;
      }
  
-@@ -2289,6 +2359,12 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
+@@ -2289,6 +2366,12 @@ ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u,
          ngx_add_timer(c->read, u->read_timeout);
  
          if (c->read->ready) {
@@ -152,7 +159,7 @@ index 1c7a9f1..b168bce 100644
              ngx_http_upstream_process_header(r, u);
              return;
          }
-@@ -2326,6 +2402,11 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r,
+@@ -2326,6 +2409,11 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r,
              u->request_body_blocked = 1;
  
          } else {
@@ -164,7 +171,7 @@ index 1c7a9f1..b168bce 100644
              u->request_body_blocked = 0;
          }
  
-@@ -3937,6 +4018,13 @@ ngx_http_upstream_process_non_buffered_downstream(ngx_http_request_t *r)
+@@ -3937,6 +4025,13 @@ ngx_http_upstream_process_non_buffered_downstream(ngx_http_request_t *r)
          return;
      }
  
@@ -178,7 +185,7 @@ index 1c7a9f1..b168bce 100644
      ngx_http_upstream_process_non_buffered_request(r, 1);
  }
  
-@@ -4631,6 +4719,16 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u,
+@@ -4631,6 +4726,16 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u,
      ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                     "http next upstream, %xi", ft_type);
  
@@ -195,7 +202,7 @@ index 1c7a9f1..b168bce 100644
      if (u->peer.sockaddr) {
  
          if (u->peer.connection) {
-@@ -4805,6 +4903,16 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r,
+@@ -4805,6 +4910,16 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r,
      ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                     "finalize http upstream request: %i", rc);
  
